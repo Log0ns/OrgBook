@@ -1,0 +1,590 @@
+import React, { useState, useMemo } from 'react';
+import { Search, Users, Building2, Tag, Upload, X, Link as LinkIcon } from 'lucide-react';
+import * as XLSX from 'xlsx';
+
+const OrgCommTool = () => {
+  const [employees, setEmployees] = useState([]);
+  const [topics, setTopics] = useState([]);
+  const [teams, setTeams] = useState([]);
+  const [activeView, setActiveView] = useState('employees');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterDepartment, setFilterDepartment] = useState('');
+  const [filterManager, setFilterManager] = useState('');
+  const [filterTopic, setFilterTopic] = useState('');
+  const [filterTeam, setFilterTeam] = useState('');
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [showLinkModal, setShowLinkModal] = useState(false);
+
+  // File import handlers
+  const handleEmployeeImport = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const data = new Uint8Array(evt.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json(sheet);
+      
+      const employeeData = jsonData.map((row, idx) => ({
+        id: `emp-${idx}`,
+        name: row.Name || row.name || '',
+        reportsTo: row['Reports To'] || row.reportsTo || row['reports to'] || '',
+        jobTitle: row['Job Title'] || row.jobTitle || row['job title'] || '',
+        department: row.Department || row.department || '',
+        topics: [],
+        teams: []
+      }));
+      
+      setEmployees(employeeData);
+    };
+    reader.readAsArrayBuffer(file);
+    e.target.value = '';
+  };
+
+  const handleTopicImport = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const data = new Uint8Array(evt.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json(sheet);
+      
+      const topicData = jsonData.map((row, idx) => ({
+        id: `topic-${idx}`,
+        name: row.Name || row.name || '',
+        description: row.Description || row.description || '',
+        employees: []
+      }));
+      
+      setTopics(topicData);
+    };
+    reader.readAsArrayBuffer(file);
+    e.target.value = '';
+  };
+
+  const handleTeamImport = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const data = new Uint8Array(evt.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json(sheet);
+      
+      const teamData = jsonData.map((row, idx) => ({
+        id: `team-${idx}`,
+        name: row.Name || row.name || '',
+        description: row.Description || row.description || '',
+        teamsLink: row['Teams Channel'] || row.teamsLink || row['teams channel'] || '',
+        employees: []
+      }));
+      
+      setTeams(teamData);
+    };
+    reader.readAsArrayBuffer(file);
+    e.target.value = '';
+  };
+
+  // Linking functionality
+  const linkEmployeeToItem = (employeeId, itemId, itemType) => {
+    setEmployees(prev => prev.map(emp => {
+      if (emp.id === employeeId) {
+        const array = itemType === 'topic' ? 'topics' : 'teams';
+        return { ...emp, [array]: [...emp[array], itemId] };
+      }
+      return emp;
+    }));
+
+    if (itemType === 'topic') {
+      setTopics(prev => prev.map(topic => {
+        if (topic.id === itemId) {
+          return { ...topic, employees: [...topic.employees, employeeId] };
+        }
+        return topic;
+      }));
+    } else {
+      setTeams(prev => prev.map(team => {
+        if (team.id === itemId) {
+          return { ...team, employees: [...team.employees, employeeId] };
+        }
+        return team;
+      }));
+    }
+  };
+
+  const unlinkEmployeeFromItem = (employeeId, itemId, itemType) => {
+    setEmployees(prev => prev.map(emp => {
+      if (emp.id === employeeId) {
+        const array = itemType === 'topic' ? 'topics' : 'teams';
+        return { ...emp, [array]: emp[array].filter(id => id !== itemId) };
+      }
+      return emp;
+    }));
+
+    if (itemType === 'topic') {
+      setTopics(prev => prev.map(topic => {
+        if (topic.id === itemId) {
+          return { ...topic, employees: topic.employees.filter(id => id !== employeeId) };
+        }
+        return topic;
+      }));
+    } else {
+      setTeams(prev => prev.map(team => {
+        if (team.id === itemId) {
+          return { ...team, employees: team.employees.filter(id => id !== employeeId) };
+        }
+        return team;
+      }));
+    }
+  };
+
+  // Organize employees by manager and department
+  const organizedEmployees = useMemo(() => {
+    const depts = {};
+    
+    employees.forEach(emp => {
+      if (!depts[emp.department]) {
+        depts[emp.department] = {};
+      }
+      if (!depts[emp.department][emp.reportsTo]) {
+        depts[emp.department][emp.reportsTo] = [];
+      }
+      depts[emp.department][emp.reportsTo].push(emp);
+    });
+    
+    return depts;
+  }, [employees]);
+
+  // Filter employees
+  const filteredEmployees = useMemo(() => {
+    return employees.filter(emp => {
+      const matchesSearch = emp.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesDept = !filterDepartment || emp.department === filterDepartment;
+      const matchesManager = !filterManager || emp.reportsTo === filterManager;
+      const matchesTopic = !filterTopic || emp.topics.includes(filterTopic);
+      const matchesTeam = !filterTeam || emp.teams.includes(filterTeam);
+      
+      return matchesSearch && matchesDept && matchesManager && matchesTopic && matchesTeam;
+    });
+  }, [employees, searchTerm, filterDepartment, filterManager, filterTopic, filterTeam]);
+
+  const departments = [...new Set(employees.map(e => e.department))].filter(Boolean);
+  const managers = [...new Set(employees.map(e => e.reportsTo))].filter(Boolean);
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      {/* Header */}
+      <header className="bg-white border-b border-slate-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-semibold text-slate-800">Organization Hub</h1>
+            <div className="flex gap-2">
+              <label className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer transition-colors text-sm font-medium flex items-center gap-2">
+                <Upload size={16} />
+                Import Employees
+                <input type="file" accept=".xlsx,.xls" onChange={handleEmployeeImport} className="hidden" />
+              </label>
+              <label className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 cursor-pointer transition-colors text-sm font-medium flex items-center gap-2">
+                <Upload size={16} />
+                Import Topics
+                <input type="file" accept=".xlsx,.xls" onChange={handleTopicImport} className="hidden" />
+              </label>
+              <label className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 cursor-pointer transition-colors text-sm font-medium flex items-center gap-2">
+                <Upload size={16} />
+                Import Teams
+                <input type="file" accept=".xlsx,.xls" onChange={handleTeamImport} className="hidden" />
+              </label>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Navigation */}
+      <nav className="bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex gap-1">
+            {[
+              { id: 'employees', label: 'Employees', icon: Users },
+              { id: 'topics', label: 'Topics', icon: Tag },
+              { id: 'teams', label: 'Tech Teams', icon: Building2 }
+            ].map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => setActiveView(id)}
+                className={`px-6 py-3 font-medium transition-colors flex items-center gap-2 border-b-2 ${
+                  activeView === id
+                    ? 'text-blue-600 border-blue-600'
+                    : 'text-slate-600 border-transparent hover:text-slate-900'
+                }`}
+              >
+                <Icon size={18} />
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        {/* Search and Filters */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div className="md:col-span-2 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
+              <input
+                type="text"
+                placeholder="Search by name..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <select
+              value={filterDepartment}
+              onChange={(e) => setFilterDepartment(e.target.value)}
+              className="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">All Departments</option>
+              {departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
+            </select>
+            <select
+              value={filterTopic}
+              onChange={(e) => setFilterTopic(e.target.value)}
+              className="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">All Topics</option>
+              {topics.map(topic => <option key={topic.id} value={topic.id}>{topic.name}</option>)}
+            </select>
+            <select
+              value={filterTeam}
+              onChange={(e) => setFilterTeam(e.target.value)}
+              className="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">All Teams</option>
+              {teams.map(team => <option key={team.id} value={team.id}>{team.name}</option>)}
+            </select>
+          </div>
+        </div>
+
+        {/* Employees View */}
+        {activeView === 'employees' && (
+          <div className="space-y-6">
+            {Object.entries(organizedEmployees).map(([dept, managerGroups]) => (
+              <div key={dept} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div className="bg-gradient-to-r from-slate-700 to-slate-600 px-6 py-4">
+                  <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+                    <Building2 size={20} />
+                    {dept || 'Unassigned'}
+                  </h2>
+                </div>
+                <div className="p-6 space-y-6">
+                  {Object.entries(managerGroups).map(([manager, empList]) => {
+                    const filtered = empList.filter(emp => filteredEmployees.includes(emp));
+                    if (filtered.length === 0) return null;
+                    
+                    return (
+                      <div key={manager} className="border-l-4 border-blue-500 pl-4">
+                        <h3 className="text-sm font-semibold text-slate-600 mb-3">
+                          Reports to: {manager || 'None'}
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {filtered.map(emp => (
+                            <div
+                              key={emp.id}
+                              onClick={() => setSelectedItem({ type: 'employee', data: emp })}
+                              className="bg-slate-50 rounded-lg p-4 hover:bg-slate-100 transition-colors cursor-pointer border border-slate-200"
+                            >
+                              <h4 className="font-semibold text-slate-800">{emp.name}</h4>
+                              <p className="text-sm text-slate-600 mt-1">{emp.jobTitle}</p>
+                              <div className="flex gap-2 mt-2">
+                                {emp.topics.length > 0 && (
+                                  <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded">
+                                    {emp.topics.length} topic{emp.topics.length !== 1 ? 's' : ''}
+                                  </span>
+                                )}
+                                {emp.teams.length > 0 && (
+                                  <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
+                                    {emp.teams.length} team{emp.teams.length !== 1 ? 's' : ''}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Topics View */}
+        {activeView === 'topics' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {topics.map(topic => (
+              <div
+                key={topic.id}
+                onClick={() => setSelectedItem({ type: 'topic', data: topic })}
+                className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow cursor-pointer"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
+                    <Tag size={18} className="text-emerald-600" />
+                    {topic.name}
+                  </h3>
+                  <span className="text-sm bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full">
+                    {topic.employees.length} contact{topic.employees.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+                <p className="text-slate-600 text-sm">{topic.description}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Teams View */}
+        {activeView === 'teams' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {teams.map(team => (
+              <div
+                key={team.id}
+                onClick={() => setSelectedItem({ type: 'team', data: team })}
+                className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow cursor-pointer"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
+                    <Building2 size={18} className="text-purple-600" />
+                    {team.name}
+                  </h3>
+                  <span className="text-sm bg-purple-100 text-purple-700 px-3 py-1 rounded-full">
+                    {team.employees.length} member{team.employees.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+                <p className="text-slate-600 text-sm mb-3">{team.description}</p>
+                {team.teamsLink && (
+                  <a
+                    href={team.teamsLink}
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-blue-600 hover:text-blue-700 text-sm flex items-center gap-1"
+                  >
+                    <LinkIcon size={14} />
+                    Teams Channel
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </main>
+
+      {/* Detail Modal */}
+      {selectedItem && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+            <div className="bg-gradient-to-r from-slate-700 to-slate-600 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-white">
+                {selectedItem.data.name}
+              </h2>
+              <button
+                onClick={() => setSelectedItem(null)}
+                className="text-white hover:bg-white hover:bg-opacity-20 rounded-lg p-2 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto max-h-[calc(80vh-80px)]">
+              {selectedItem.type === 'employee' && (
+                <>
+                  <div className="space-y-3 mb-6">
+                    <p className="text-slate-600"><span className="font-semibold">Job Title:</span> {selectedItem.data.jobTitle}</p>
+                    <p className="text-slate-600"><span className="font-semibold">Department:</span> {selectedItem.data.department}</p>
+                    <p className="text-slate-600"><span className="font-semibold">Reports To:</span> {selectedItem.data.reportsTo}</p>
+                  </div>
+
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-semibold text-slate-800">Linked Topics & Teams</h3>
+                    <button
+                      onClick={() => setShowLinkModal(true)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                    >
+                      Add Link
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="text-sm font-semibold text-emerald-700 mb-2">Topics</h4>
+                      <div className="space-y-2">
+                        {selectedItem.data.topics.map(topicId => {
+                          const topic = topics.find(t => t.id === topicId);
+                          return topic ? (
+                            <div key={topicId} className="flex items-center justify-between bg-emerald-50 rounded-lg p-3">
+                              <span className="text-slate-800">{topic.name}</span>
+                              <button
+                                onClick={() => unlinkEmployeeFromItem(selectedItem.data.id, topicId, 'topic')}
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                <X size={16} />
+                              </button>
+                            </div>
+                          ) : null;
+                        })}
+                        {selectedItem.data.topics.length === 0 && (
+                          <p className="text-slate-500 text-sm">No topics linked</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="text-sm font-semibold text-purple-700 mb-2">Tech Teams</h4>
+                      <div className="space-y-2">
+                        {selectedItem.data.teams.map(teamId => {
+                          const team = teams.find(t => t.id === teamId);
+                          return team ? (
+                            <div key={teamId} className="flex items-center justify-between bg-purple-50 rounded-lg p-3">
+                              <span className="text-slate-800">{team.name}</span>
+                              <button
+                                onClick={() => unlinkEmployeeFromItem(selectedItem.data.id, teamId, 'team')}
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                <X size={16} />
+                              </button>
+                            </div>
+                          ) : null;
+                        })}
+                        {selectedItem.data.teams.length === 0 && (
+                          <p className="text-slate-500 text-sm">No teams linked</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {(selectedItem.type === 'topic' || selectedItem.type === 'team') && (
+                <>
+                  <p className="text-slate-600 mb-6">{selectedItem.data.description}</p>
+                  {selectedItem.type === 'team' && selectedItem.data.teamsLink && (
+                    <a
+                      href={selectedItem.data.teamsLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-700 flex items-center gap-2 mb-6"
+                    >
+                      <LinkIcon size={16} />
+                      Open Teams Channel
+                    </a>
+                  )}
+                  
+                  <h3 className="text-lg font-semibold text-slate-800 mb-4">Contacts</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {selectedItem.data.employees.map(empId => {
+                      const emp = employees.find(e => e.id === empId);
+                      return emp ? (
+                        <div key={empId} className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                          <h4 className="font-semibold text-slate-800">{emp.name}</h4>
+                          <p className="text-sm text-slate-600 mt-1">{emp.jobTitle}</p>
+                          <p className="text-sm text-slate-500">{emp.department}</p>
+                        </div>
+                      ) : null;
+                    })}
+                    {selectedItem.data.employees.length === 0 && (
+                      <p className="text-slate-500 text-sm col-span-2">No contacts linked</p>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Link Modal */}
+      {showLinkModal && selectedItem?.type === 'employee' && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
+            <div className="bg-gradient-to-r from-slate-700 to-slate-600 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-white">Add Link</h2>
+              <button
+                onClick={() => setShowLinkModal(false)}
+                className="text-white hover:bg-white hover:bg-opacity-20 rounded-lg p-2 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-700 mb-2">Topics</h3>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {topics.filter(t => !selectedItem.data.topics.includes(t.id)).map(topic => (
+                    <button
+                      key={topic.id}
+                      onClick={() => {
+                        linkEmployeeToItem(selectedItem.data.id, topic.id, 'topic');
+                        setSelectedItem({
+                          ...selectedItem,
+                          data: {
+                            ...selectedItem.data,
+                            topics: [...selectedItem.data.topics, topic.id]
+                          }
+                        });
+                      }}
+                      className="w-full text-left bg-emerald-50 hover:bg-emerald-100 rounded-lg p-3 transition-colors"
+                    >
+                      {topic.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold text-slate-700 mb-2">Tech Teams</h3>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {teams.filter(t => !selectedItem.data.teams.includes(t.id)).map(team => (
+                    <button
+                      key={team.id}
+                      onClick={() => {
+                        linkEmployeeToItem(selectedItem.data.id, team.id, 'team');
+                        setSelectedItem({
+                          ...selectedItem,
+                          data: {
+                            ...selectedItem.data,
+                            teams: [...selectedItem.data.teams, team.id]
+                          }
+                        });
+                      }}
+                      className="w-full text-left bg-purple-50 hover:bg-purple-100 rounded-lg p-3 transition-colors"
+                    >
+                      {team.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowLinkModal(false)}
+                className="w-full px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default OrgCommTool;
