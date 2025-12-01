@@ -407,24 +407,7 @@ const OrgCommTool = () => {
       <header className="bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-semibold text-slate-800">Organization Hub</h1>
-            <div className="flex gap-2">
-              <label className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer transition-colors text-sm font-medium flex items-center gap-2">
-                <Upload size={16} />
-                Import Employees
-                <input type="file" accept=".xlsx,.xls" onChange={handleEmployeeImport} className="hidden" />
-              </label>
-              <label className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 cursor-pointer transition-colors text-sm font-medium flex items-center gap-2">
-                <Upload size={16} />
-                Import Topics
-                <input type="file" accept=".xlsx,.xls" onChange={handleTopicImport} className="hidden" />
-              </label>
-              <label className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 cursor-pointer transition-colors text-sm font-medium flex items-center gap-2">
-                <Upload size={16} />
-                Import Teams
-                <input type="file" accept=".xlsx,.xls" onChange={handleTeamImport} className="hidden" />
-              </label>
-            </div>
+            <h1 className="text-2xl font-semibold text-slate-800">OrgBook</h1>
           </div>
         </div>
       </header>
@@ -458,14 +441,43 @@ const OrgCommTool = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
         {/* Create Button */}
-        <div className="mb-6 flex justify-end">
+        <div className="mb-6 flex justify-end gap-2">
+
+          {/* CREATE button */}
           <button
-            onClick={() => openCreateModal(activeView === 'employees' ? 'employee' : activeView === 'topics' ? 'topic' : 'team')}
+            onClick={() => openCreateModal(
+              activeView === 'employees' ? 'employee' :
+              activeView === 'topics' ? 'topic' : 'team'
+            )}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2 shadow-sm"
           >
             <Plus size={20} />
             Create New {activeView === 'employees' ? 'Employee' : activeView === 'topics' ? 'Topic' : 'Tech Team'}
           </button>
+        
+          {/* IMPORT button for THIS view */}
+          {activeView === 'employees' && (
+            <label className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 cursor-pointer transition-colors font-medium flex items-center gap-2 shadow-sm">
+              <Upload size={20} />
+              Import Employees
+              <input type="file" accept=".xlsx,.xls" onChange={handleEmployeeImport} className="hidden" />
+            </label>
+          )}
+          {activeView === 'topics' && (
+            <label className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 cursor-pointer transition-colors font-medium flex items-center gap-2 shadow-sm">
+              <Upload size={20} />
+              Import Topics
+              <input type="file" accept=".xlsx,.xls" onChange={handleTopicImport} className="hidden" />
+            </label>
+          )}
+          {activeView === 'teams' && (
+            <label className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 cursor-pointer transition-colors font-medium flex items-center gap-2 shadow-sm">
+              <Upload size={20} />
+              Import Teams
+              <input type="file" accept=".xlsx,.xls" onChange={handleTeamImport} className="hidden" />
+            </label>
+          )}
+        
         </div>
 
         {/* Search and Filters */}
@@ -548,17 +560,24 @@ const OrgCommTool = () => {
                             >
                               <h4 className="font-semibold text-slate-800">{emp.name}</h4>
                               <p className="text-sm text-slate-600 mt-1">{emp.jobTitle}</p>
-                              <div className="flex gap-2 mt-2">
-                                {emp.topics.length > 0 && (
-                                  <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded">
-                                    {emp.topics.length} topic{emp.topics.length !== 1 ? 's' : ''}
-                                  </span>
-                                )}
-                                {emp.teams.length > 0 && (
-                                  <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
-                                    {emp.teams.length} team{emp.teams.length !== 1 ? 's' : ''}
-                                  </span>
-                                )}
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                {emp.topics.map(id => {
+                                  const t = topics.find(x => x.id === id);
+                                  return t ? (
+                                    <span key={id} className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded">
+                                      {t.name}
+                                    </span>
+                                  ) : null;
+                                })}
+                              
+                                {emp.teams.map(id => {
+                                  const tm = teams.find(x => x.id === id);
+                                  return tm ? (
+                                    <span key={id} className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
+                                      {tm.name}
+                                    </span>
+                                  ) : null;
+                                })}
                               </div>
                             </div>
                           ))}
@@ -696,7 +715,16 @@ const OrgCommTool = () => {
                             <div key={topicId} className="flex items-center justify-between bg-emerald-50 rounded-lg p-3">
                               <span className="text-slate-800">{topic.name}</span>
                               <button
-                                onClick={() => unlinkEmployeeFromItem(selectedItem.data.id, topicId, 'topic')}
+                                onClick={() => {
+                                  unlinkEmployeeFromItem(selectedItem.data.id, topicId, 'topic');
+                                  setSelectedItem({
+                                    ...selectedItem,
+                                    data: {
+                                      ...selectedItem.data,
+                                      topics: selectedItem.data.topics.filter(id => id !== topicId)
+                                    }
+                                  });
+                                }}
                                 className="text-red-600 hover:text-red-700"
                               >
                                 <X size={16} />
@@ -719,7 +747,16 @@ const OrgCommTool = () => {
                             <div key={teamId} className="flex items-center justify-between bg-purple-50 rounded-lg p-3">
                               <span className="text-slate-800">{team.name}</span>
                               <button
-                                onClick={() => unlinkEmployeeFromItem(selectedItem.data.id, teamId, 'team')}
+                                onClick={() => {
+                                  unlinkEmployeeFromItem(selectedItem.data.id, teamId, 'team');
+                                  setSelectedItem({
+                                    ...selectedItem,
+                                    data: {
+                                      ...selectedItem.data,
+                                      teams: selectedItem.data.teams.filter(id => id !== teamId)
+                                    }
+                                  });
+                                }}
                                 className="text-red-600 hover:text-red-700"
                               >
                                 <X size={16} />
