@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, Users, Building2, Tag, Upload, X, ExternalLink, Plus, Edit2 } from 'lucide-react';
+import { Search, Users, Building2, Tag, Upload, X, ExternalLink, Plus, Edit2, Trash } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 const OrgCommTool = () => {
@@ -602,7 +602,7 @@ const OrgCommTool = () => {
                   className="text-white hover:bg-red-600 hover:bg-opacity-20 rounded-lg p-2 transition-colors"
                   title="Delete"
                 >
-                  <(X) size={20} />
+                  <Trash size={20} />
                 </button>
                 <button
                   onClick={() => setSelectedItem(null)}
