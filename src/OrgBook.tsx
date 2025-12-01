@@ -41,6 +41,32 @@ const OrgCommTool = () => {
   const [formData, setFormData] = useState({});
 
   // Deleting functionality
+  const deleteDepartment = (departmentName) => {
+    // get all employees in this department
+    const employeesToDelete = employees.filter(e => e.department === departmentName).map(e => e.id);
+  
+    // 1. Remove all employees in this department
+    setEmployees(prev =>
+      prev.filter(e => e.department !== departmentName)
+    );
+  
+    // 2. Remove these employees from all topics
+    setTopics(prev =>
+      prev.map(topic => ({
+        ...topic,
+        employees: topic.employees.filter(id => !employeesToDelete.includes(id))
+      }))
+    );
+  
+    // 3. Remove these employees from all teams
+    setTeams(prev =>
+      prev.map(team => ({
+        ...team,
+        employees: team.employees.filter(id => !employeesToDelete.includes(id))
+      }))
+    );
+  };
+  
   const deleteEmployee = (employeeId) => {
     // 1. Remove employee record
     setEmployees(prev => prev.filter(e => e.id !== employeeId));
@@ -487,11 +513,21 @@ const OrgCommTool = () => {
           <div className="space-y-6">
             {Object.entries(organizedEmployees).map(([dept, managerGroups]) => (
               <div key={dept} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <div className="bg-gradient-to-r from-slate-700 to-slate-600 px-6 py-4">
+                <div className="bg-gradient-to-r from-slate-700 to-slate-600 px-6 py-4 flex items-center justify-between">
                   <h2 className="text-xl font-semibold text-white flex items-center gap-2">
                     <Building2 size={20} />
                     {dept || 'Unassigned'}
                   </h2>
+                
+                  {dept && (
+                    <button
+                      onClick={() => deleteDepartment(dept)}
+                      className="text-white hover:bg-red-600 hover:bg-opacity-20 rounded-lg p-2 transition-colors"
+                      title="Delete Department"
+                    >
+                      <Trash size={20} />
+                    </button>
+                  )}
                 </div>
                 <div className="p-6 space-y-6">
                   {Object.entries(managerGroups).map(([manager, empList]) => {
