@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Users, Building2, Tag, Upload, X, Link as LinkIcon } from 'lucide-react';
+import { Search, Users, Building2, Tag, Upload, X, ExternalLink, Plus } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 const OrgCommTool = () => {
@@ -14,6 +14,9 @@ const OrgCommTool = () => {
   const [filterTeam, setFilterTeam] = useState('');
   const [selectedItem, setSelectedItem] = useState(null);
   const [showLinkModal, setShowLinkModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createType, setCreateType] = useState('');
+  const [formData, setFormData] = useState({});
 
   // File import handlers
   const handleEmployeeImport = (e) => {
@@ -178,6 +181,47 @@ const OrgCommTool = () => {
   const departments = [...new Set(employees.map(e => e.department))].filter(Boolean);
   const managers = [...new Set(employees.map(e => e.reportsTo))].filter(Boolean);
 
+  // Create new items
+  const openCreateModal = (type) => {
+    setCreateType(type);
+    setFormData({});
+    setShowCreateModal(true);
+  };
+
+  const handleCreate = () => {
+    if (createType === 'employee') {
+      const newEmployee = {
+        id: `emp-${Date.now()}`,
+        name: formData.name || '',
+        reportsTo: formData.reportsTo || '',
+        jobTitle: formData.jobTitle || '',
+        department: formData.department || '',
+        topics: [],
+        teams: []
+      };
+      setEmployees([...employees, newEmployee]);
+    } else if (createType === 'topic') {
+      const newTopic = {
+        id: `topic-${Date.now()}`,
+        name: formData.name || '',
+        description: formData.description || '',
+        employees: []
+      };
+      setTopics([...topics, newTopic]);
+    } else if (createType === 'team') {
+      const newTeam = {
+        id: `team-${Date.now()}`,
+        name: formData.name || '',
+        description: formData.description || '',
+        teamsLink: formData.teamsLink || '',
+        employees: []
+      };
+      setTeams([...teams, newTeam]);
+    }
+    setShowCreateModal(false);
+    setFormData({});
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header */}
@@ -234,6 +278,17 @@ const OrgCommTool = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
+        {/* Create Button */}
+        <div className="mb-6 flex justify-end">
+          <button
+            onClick={() => openCreateModal(activeView === 'employees' ? 'employee' : activeView === 'topics' ? 'topic' : 'team')}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2 shadow-sm"
+          >
+            <Plus size={20} />
+            Create New {activeView === 'employees' ? 'Employee' : activeView === 'topics' ? 'Topic' : 'Tech Team'}
+          </button>
+        </div>
+
         {/* Search and Filters */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -377,7 +432,7 @@ const OrgCommTool = () => {
                     onClick={(e) => e.stopPropagation()}
                     className="text-blue-600 hover:text-blue-700 text-sm flex items-center gap-1"
                   >
-                    <LinkIcon size={14} />
+                    <ExternalLink size={14} />
                     Teams Channel
                   </a>
                 )}
@@ -482,7 +537,7 @@ const OrgCommTool = () => {
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:text-blue-700 flex items-center gap-2 mb-6"
                     >
-                      <LinkIcon size={16} />
+                      <ExternalLink size={16} />
                       Open Teams Channel
                     </a>
                   )}
@@ -505,6 +560,156 @@ const OrgCommTool = () => {
                   </div>
                 </>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
+            <div className="bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-white">
+                Create New {createType === 'employee' ? 'Employee' : createType === 'topic' ? 'Topic' : 'Tech Team'}
+              </h2>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="text-white hover:bg-white hover:bg-opacity-20 rounded-lg p-2 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              {createType === 'employee' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Name *</label>
+                    <input
+                      type="text"
+                      value={formData.name || ''}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="John Doe"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Job Title *</label>
+                    <input
+                      type="text"
+                      value={formData.jobTitle || ''}
+                      onChange={(e) => setFormData({...formData, jobTitle: e.target.value})}
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Software Engineer"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Department *</label>
+                    <input
+                      type="text"
+                      value={formData.department || ''}
+                      onChange={(e) => setFormData({...formData, department: e.target.value})}
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Engineering"
+                      list="departments"
+                    />
+                    <datalist id="departments">
+                      {departments.map(dept => <option key={dept} value={dept} />)}
+                    </datalist>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Reports To</label>
+                    <input
+                      type="text"
+                      value={formData.reportsTo || ''}
+                      onChange={(e) => setFormData({...formData, reportsTo: e.target.value})}
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Jane Smith"
+                      list="managers"
+                    />
+                    <datalist id="managers">
+                      {managers.map(mgr => <option key={mgr} value={mgr} />)}
+                    </datalist>
+                  </div>
+                </>
+              )}
+
+              {createType === 'topic' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Topic Name *</label>
+                    <input
+                      type="text"
+                      value={formData.name || ''}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="API Integration"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Description *</label>
+                    <textarea
+                      value={formData.description || ''}
+                      onChange={(e) => setFormData({...formData, description: e.target.value})}
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Questions about integrating with external APIs"
+                      rows="3"
+                    />
+                  </div>
+                </>
+              )}
+
+              {createType === 'team' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Team Name *</label>
+                    <input
+                      type="text"
+                      value={formData.name || ''}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Platform Team"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Description *</label>
+                    <textarea
+                      value={formData.description || ''}
+                      onChange={(e) => setFormData({...formData, description: e.target.value})}
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Responsible for platform infrastructure and tooling"
+                      rows="3"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Teams Channel Link</label>
+                    <input
+                      type="url"
+                      value={formData.teamsLink || ''}
+                      onChange={(e) => setFormData({...formData, teamsLink: e.target.value})}
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="https://teams.microsoft.com/..."
+                    />
+                  </div>
+                </>
+              )}
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreate}
+                  disabled={!formData.name || (createType === 'employee' && (!formData.jobTitle || !formData.department))}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:bg-slate-300 disabled:cursor-not-allowed"
+                >
+                  Create
+                </button>
+              </div>
             </div>
           </div>
         </div>
