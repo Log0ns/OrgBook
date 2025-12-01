@@ -117,7 +117,13 @@ const OrgCommTool = () => {
         teams: []
       }));
       
-      setEmployees(employeeData);
+      setEmployees(prev => [
+        ...prev,
+        ...employeeData.map(emp => ({
+          ...emp,
+          id: `emp-${Date.now()}-${Math.random().toString(36).slice(2)}` // ensure unique IDs
+        }))
+      ]);
     };
     reader.readAsArrayBuffer(file);
     e.target.value = '';
@@ -141,7 +147,13 @@ const OrgCommTool = () => {
         employees: []
       }));
       
-      setTopics(topicData);
+      setTopics(prev => [
+        ...prev,
+        ...topicData.map(topic => ({
+          ...topic,
+          id: `topic-${Date.now()}-${Math.random().toString(36).slice(2)}`
+        }))
+      ]);
     };
     reader.readAsArrayBuffer(file);
     e.target.value = '';
@@ -166,7 +178,13 @@ const OrgCommTool = () => {
         employees: []
       }));
       
-      setTeams(teamData);
+      setTeams(prev => [
+        ...prev,
+        ...teamData.map(team => ({
+          ...team,
+          id: `team-${Date.now()}-${Math.random().toString(36).slice(2)}`
+        }))
+      ]);
     };
     reader.readAsArrayBuffer(file);
     e.target.value = '';
