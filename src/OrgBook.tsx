@@ -40,6 +40,61 @@ const OrgCommTool = () => {
   const [createType, setCreateType] = useState('');
   const [formData, setFormData] = useState({});
 
+  // Deleting functionality
+  const deleteEmployee = (employeeId) => {
+    // 1. Remove employee record
+    setEmployees(prev => prev.filter(e => e.id !== employeeId));
+  
+    // 2. Remove employee from all topics
+    setTopics(prev =>
+      prev.map(t => ({
+        ...t,
+        employees: t.employees.filter(id => id !== employeeId)
+      }))
+    );
+  
+    // 3. Remove employee from all teams
+    setTeams(prev =>
+      prev.map(team => ({
+        ...team,
+        employees: team.employees.filter(id => id !== employeeId)
+      }))
+    );
+  
+    // Close modal
+    setSelectedItem(null);
+  };
+
+  const deleteTopic = (topicId) => {
+    // Remove topic from topic list
+    setTopics(prev => prev.filter(t => t.id !== topicId));
+  
+    // Remove topic link from every employee
+    setEmployees(prev =>
+      prev.map(emp => ({
+        ...emp,
+        topics: emp.topics.filter(id => id !== topicId)
+      }))
+    );
+  
+    setSelectedItem(null);
+  };
+
+  const deleteTeam = (teamId) => {
+    // Remove team
+    setTeams(prev => prev.filter(t => t.id !== teamId));
+  
+    // Remove team link from employees
+    setEmployees(prev =>
+      prev.map(emp => ({
+        ...emp,
+        teams: emp.teams.filter(id => id !== teamId)
+      }))
+    );
+  
+    setSelectedItem(null);
+  };
+
   // File import handlers
   const handleEmployeeImport = (e) => {
     const file = e.target.files[0];
@@ -537,6 +592,17 @@ const OrgCommTool = () => {
                   title="Edit"
                 >
                   <Edit2 size={20} />
+                </button>
+                <button
+                  onClick={() => {
+                    if (selectedItem.type === 'employee') deleteEmployee(selectedItem.data.id);
+                    if (selectedItem.type === 'topic') deleteTopic(selectedItem.data.id);
+                    if (selectedItem.type === 'team') deleteTeam(selectedItem.data.id);
+                  }}
+                  className="text-white hover:bg-red-600 hover:bg-opacity-20 rounded-lg p-2 transition-colors"
+                  title="Delete"
+                >
+                  <(X) size={20} />
                 </button>
                 <button
                   onClick={() => setSelectedItem(null)}
