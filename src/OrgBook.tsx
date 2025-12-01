@@ -1,11 +1,32 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Search, Users, Building2, Tag, Upload, X, ExternalLink, Plus, Edit2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 const OrgCommTool = () => {
-  const [employees, setEmployees] = useState([]);
-  const [topics, setTopics] = useState([]);
-  const [teams, setTeams] = useState([]);
+  const [employees, setEmployees] = useState(() => {
+    const saved = localStorage.getItem("employees");
+    return saved ? JSON.parse(saved) : [];
+  });
+  useEffect(() => {
+    localStorage.setItem("employees", JSON.stringify(employees));
+  }, [employees]);
+  
+  const [topics, setTopics] = useState(() => {
+    const saved = localStorage.getItem("topics");
+    return saved ? JSON.parse(saved) : [];
+  });
+  useEffect(() => {
+    localStorage.setItem("topics", JSON.stringify(topics));
+  }, [topics]);
+  
+  const [teams, setTeams] = useState(() => {
+    const saved = localStorage.getItem("teams");
+    return saved ? JSON.parse(saved) : [];
+  });
+  useEffect(() => {
+    localStorage.setItem("teams", JSON.stringify(teams));
+  }, [teams]);
+  
   const [activeView, setActiveView] = useState('employees');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDepartment, setFilterDepartment] = useState('');
