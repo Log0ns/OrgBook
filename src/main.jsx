@@ -1,9 +1,9 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import OrgCommTool from "./OrgBook";
+import OrgBook from "./OrgBook";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <OrgCommTool />
+    <OrgBook />
   </React.StrictMode>
 );
