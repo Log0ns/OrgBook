@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Users, Building2, Tag, Upload, X, ExternalLink, Plus } from 'lucide-react';
+import { Search, Users, Building2, Tag, Upload, X, ExternalLink, Plus, Edit2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 const OrgCommTool = () => {
@@ -15,6 +15,7 @@ const OrgCommTool = () => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [createType, setCreateType] = useState('');
   const [formData, setFormData] = useState({});
 
@@ -219,6 +220,64 @@ const OrgCommTool = () => {
       setTeams([...teams, newTeam]);
     }
     setShowCreateModal(false);
+    setFormData({});
+  };
+
+  // Edit items
+  const openEditModal = (item, type) => {
+    setCreateType(type);
+    setFormData({...item});
+    setShowEditModal(true);
+  };
+
+  const handleEdit = () => {
+    if (createType === 'employee') {
+      setEmployees(prev => prev.map(emp => 
+        emp.id === formData.id ? {
+          ...emp,
+          name: formData.name || '',
+          reportsTo: formData.reportsTo || '',
+          jobTitle: formData.jobTitle || '',
+          department: formData.department || ''
+        } : emp
+      ));
+      if (selectedItem?.data?.id === formData.id) {
+        setSelectedItem({
+          type: 'employee',
+          data: { ...selectedItem.data, ...formData }
+        });
+      }
+    } else if (createType === 'topic') {
+      setTopics(prev => prev.map(topic => 
+        topic.id === formData.id ? {
+          ...topic,
+          name: formData.name || '',
+          description: formData.description || ''
+        } : topic
+      ));
+      if (selectedItem?.data?.id === formData.id) {
+        setSelectedItem({
+          type: 'topic',
+          data: { ...selectedItem.data, ...formData }
+        });
+      }
+    } else if (createType === 'team') {
+      setTeams(prev => prev.map(team => 
+        team.id === formData.id ? {
+          ...team,
+          name: formData.name || '',
+          description: formData.description || '',
+          teamsLink: formData.teamsLink || ''
+        } : team
+      ));
+      if (selectedItem?.data?.id === formData.id) {
+        setSelectedItem({
+          type: 'team',
+          data: { ...selectedItem.data, ...formData }
+        });
+      }
+    }
+    setShowEditModal(false);
     setFormData({});
   };
 
@@ -450,12 +509,21 @@ const OrgCommTool = () => {
               <h2 className="text-xl font-semibold text-white">
                 {selectedItem.data.name}
               </h2>
-              <button
-                onClick={() => setSelectedItem(null)}
-                className="text-white hover:bg-white hover:bg-opacity-20 rounded-lg p-2 transition-colors"
-              >
-                <X size={20} />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => openEditModal(selectedItem.data, selectedItem.type)}
+                  className="text-white hover:bg-white hover:bg-opacity-20 rounded-lg p-2 transition-colors"
+                  title="Edit"
+                >
+                  <Edit2 size={20} />
+                </button>
+                <button
+                  onClick={() => setSelectedItem(null)}
+                  className="text-white hover:bg-white hover:bg-opacity-20 rounded-lg p-2 transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
             </div>
             
             <div className="p-6 overflow-y-auto max-h-[calc(80vh-80px)]">
@@ -708,6 +776,156 @@ const OrgCommTool = () => {
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:bg-slate-300 disabled:cursor-not-allowed"
                 >
                   Create
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
+            <div className="bg-gradient-to-r from-amber-600 to-amber-500 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-white">
+                Edit {createType === 'employee' ? 'Employee' : createType === 'topic' ? 'Topic' : 'Tech Team'}
+              </h2>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="text-white hover:bg-white hover:bg-opacity-20 rounded-lg p-2 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              {createType === 'employee' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Name *</label>
+                    <input
+                      type="text"
+                      value={formData.name || ''}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      placeholder="John Doe"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Job Title *</label>
+                    <input
+                      type="text"
+                      value={formData.jobTitle || ''}
+                      onChange={(e) => setFormData({...formData, jobTitle: e.target.value})}
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      placeholder="Software Engineer"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Department *</label>
+                    <input
+                      type="text"
+                      value={formData.department || ''}
+                      onChange={(e) => setFormData({...formData, department: e.target.value})}
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      placeholder="Engineering"
+                      list="departments-edit"
+                    />
+                    <datalist id="departments-edit">
+                      {departments.map(dept => <option key={dept} value={dept} />)}
+                    </datalist>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Reports To</label>
+                    <input
+                      type="text"
+                      value={formData.reportsTo || ''}
+                      onChange={(e) => setFormData({...formData, reportsTo: e.target.value})}
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      placeholder="Jane Smith"
+                      list="managers-edit"
+                    />
+                    <datalist id="managers-edit">
+                      {managers.map(mgr => <option key={mgr} value={mgr} />)}
+                    </datalist>
+                  </div>
+                </>
+              )}
+
+              {createType === 'topic' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Topic Name *</label>
+                    <input
+                      type="text"
+                      value={formData.name || ''}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      placeholder="API Integration"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Description *</label>
+                    <textarea
+                      value={formData.description || ''}
+                      onChange={(e) => setFormData({...formData, description: e.target.value})}
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      placeholder="Questions about integrating with external APIs"
+                      rows="3"
+                    />
+                  </div>
+                </>
+              )}
+
+              {createType === 'team' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Team Name *</label>
+                    <input
+                      type="text"
+                      value={formData.name || ''}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      placeholder="Platform Team"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Description *</label>
+                    <textarea
+                      value={formData.description || ''}
+                      onChange={(e) => setFormData({...formData, description: e.target.value})}
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      placeholder="Responsible for platform infrastructure and tooling"
+                      rows="3"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Teams Channel Link</label>
+                    <input
+                      type="url"
+                      value={formData.teamsLink || ''}
+                      onChange={(e) => setFormData({...formData, teamsLink: e.target.value})}
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      placeholder="https://teams.microsoft.com/..."
+                    />
+                  </div>
+                </>
+              )}
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleEdit}
+                  disabled={!formData.name || (createType === 'employee' && (!formData.jobTitle || !formData.department))}
+                  className="flex-1 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors font-medium disabled:bg-slate-300 disabled:cursor-not-allowed"
+                >
+                  Save Changes
                 </button>
               </div>
             </div>
