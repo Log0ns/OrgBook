@@ -134,34 +134,36 @@ const OrgCommTool = () => {
   
     const groups = json.groups || {};
   
+    // Prepare new arrays
+    let newTeams = [];
+    let newEmployees = [...employees]; // start with existing
+    let teamLinks = {}; // teamId -> list of employeeIds to link
+  
     Object.entries(groups).forEach(([groupName, members]) => {
-      // 1. Create a new tech team for each group
       const teamId = `team-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      const newTeam = {
+  
+      newTeams.push({
         id: teamId,
         name: groupName,
         description: "Imported from CODEOWNERS JSON",
         teamsLink: "",
         employees: []
-      };
+      });
   
-      // Add the team
-      setTeams(prev => [...prev, newTeam]);
+      teamLinks[teamId] = [];
   
-      // 2. For each member like "@first.last"
       members.forEach(handle => {
         const clean = handle.replace("@", "").trim();
         const [first, last] = clean.split(".");
         const fullName = `${capitalize(first)} ${capitalize(last)}`;
   
-        // Check if employee already exists
-        let emp = employees.find(e => 
+        // match by name
+        let emp = newEmployees.find(e =>
           e.name.toLowerCase() === fullName.toLowerCase()
         );
   
-        // If employee does NOT exist → create them
         if (!emp) {
-          const newEmp = {
+          emp = {
             id: `emp-${Date.now()}-${Math.random().toString(36).slice(2)}`,
             name: fullName,
             reportsTo: "",
@@ -170,38 +172,29 @@ const OrgCommTool = () => {
             topics: [],
             teams: [teamId]
           };
-  
-          setEmployees(prev => [...prev, newEmp]);
-  
-          // Add employee to team
-          setTeams(prev =>
-            prev.map(t =>
-              t.id === teamId
-                ? { ...t, employees: [...t.employees, newEmp.id] }
-                : t
-            )
-          );
+          newEmployees.push(emp);
         } else {
-          // Employee exists → just link them to the team
           if (!emp.teams.includes(teamId)) {
-            setEmployees(prev =>
-              prev.map(e =>
-                e.id === emp.id ? { ...e, teams: [...e.teams, teamId] } : e
-              )
-            );
+            emp.teams = [...emp.teams, teamId];
           }
-  
-          // Add to team object
-          setTeams(prev =>
-            prev.map(t =>
-              t.id === teamId
-                ? { ...t, employees: [...t.employees, emp.id] }
-                : t
-            )
-          );
         }
+  
+        teamLinks[teamId].push(emp.id);
       });
     });
+  
+    // Merge into state ONCE
+    setTeams(prev =>
+      [
+        ...prev,
+        ...newTeams.map(t => ({
+          ...t,
+          employees: teamLinks[t.id]
+        }))
+      ]
+    );
+  
+    setEmployees(newEmployees);
   
     e.target.value = "";
   };
