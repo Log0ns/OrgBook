@@ -5,7 +5,7 @@ import * as XLSX from 'xlsx';
 const capitalize = (s) =>
     s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : "";
 
-const OrgBook = () => {
+const OrgCommTool = () => {
   const [employees, setEmployees] = useState(() => {
     const saved = localStorage.getItem("employees");
     return saved ? JSON.parse(saved) : [];
@@ -125,79 +125,7 @@ const OrgBook = () => {
   };
 
   // File import handlers
-  const handleCodeOwnersImport = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
   
-    const text = await file.text();
-    const json = JSON.parse(text);
-  
-    const groups = json.groups || {};
-  
-    // Prepare new arrays
-    let newTeams = [];
-    let newEmployees = [...employees]; // start with existing
-    let teamLinks = {}; // teamId -> list of employeeIds to link
-  
-    Object.entries(groups).forEach(([groupName, members]) => {
-      const teamId = `team-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  
-      newTeams.push({
-        id: teamId,
-        name: groupName,
-        description: "Imported from CODEOWNERS JSON",
-        teamsLink: "",
-        employees: []
-      });
-  
-      teamLinks[teamId] = [];
-  
-      members.forEach(handle => {
-        const clean = handle.replace("@", "").trim();
-        const [first, last] = clean.split(".");
-        const fullName = `${capitalize(first)} ${capitalize(last)}`;
-  
-        // match by name
-        let emp = newEmployees.find(e =>
-          e.name.toLowerCase() === fullName.toLowerCase()
-        );
-  
-        if (!emp) {
-          emp = {
-            id: `emp-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-            name: fullName,
-            reportsTo: "",
-            jobTitle: "",
-            department: "",
-            topics: [],
-            teams: [teamId]
-          };
-          newEmployees.push(emp);
-        } else {
-          if (!emp.teams.includes(teamId)) {
-            emp.teams = [...emp.teams, teamId];
-          }
-        }
-  
-        teamLinks[teamId].push(emp.id);
-      });
-    });
-  
-    // Merge into state ONCE
-    setTeams(prev =>
-      [
-        ...prev,
-        ...newTeams.map(t => ({
-          ...t,
-          employees: teamLinks[t.id]
-        }))
-      ]
-    );
-  
-    setEmployees(newEmployees);
-  
-    e.target.value = "";
-  };
   
   const handleEmployeeImport = (e) => {
     const file = e.target.files[0];
@@ -1278,4 +1206,4 @@ const OrgBook = () => {
   );
 };
 
-export default OrgBook;
+export default OrgCommTool;
