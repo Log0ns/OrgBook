@@ -5,7 +5,7 @@ import * as XLSX from 'xlsx';
 const capitalize = (s) =>
     s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : "";
 
-const OrgCommTool = () => {
+const OrgBook = () => {
   const [employees, setEmployees] = useState(() => {
     const saved = localStorage.getItem("employees");
     return saved ? JSON.parse(saved) : [];
@@ -1278,4 +1278,4 @@ const OrgCommTool = () => {
   );
 };
 
-export default OrgCommTool;
+export default OrgBook;
