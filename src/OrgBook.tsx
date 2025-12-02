@@ -2,32 +2,47 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Search, Users, Building2, Tag, Upload, X, ExternalLink, Plus, Edit2, Trash } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
+const safeLoad = (key) => {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    console.error(`Corrupted localStorage key: ${key}`, e);
+    return [];
+  }
+};
+
 // const capitalize = (s) =>
 //     s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : "";
 
 const OrgCommTool = () => {
-  const [employees, setEmployees] = useState(() => {
-    const saved = localStorage.getItem("employees");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [employees, setEmployees] = useState(() => safeLoad("employees"));
   useEffect(() => {
-    localStorage.setItem("employees", JSON.stringify(employees));
+    try {
+      localStorage.setItem("employees", JSON.stringify(employees));
+    } catch (e) {
+      console.error("Failed to save employees", e);
+    }
   }, [employees]);
   
-  const [topics, setTopics] = useState(() => {
-    const saved = localStorage.getItem("topics");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [topics, setTopics] = useState(() => safeLoad("topics"));
   useEffect(() => {
-    localStorage.setItem("topics", JSON.stringify(topics));
+    try {
+      localStorage.setItem("topics", JSON.stringify(topics));
+    } catch (e) {
+      console.error("Failed to save topics", e);
+    }
   }, [topics]);
   
-  const [teams, setTeams] = useState(() => {
-    const saved = localStorage.getItem("teams");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [teams, setTeams] = useState(() => safeLoad("teams"));
   useEffect(() => {
-    localStorage.setItem("teams", JSON.stringify(teams));
+    try {
+      localStorage.setItem("teams", JSON.stringify(teams));
+    } catch (e) {
+      console.error("Failed to save teams", e);
+    }
   }, [teams]);
   
   const [activeView, setActiveView] = useState('employees');
