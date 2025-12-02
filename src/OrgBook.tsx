@@ -121,7 +121,91 @@ const OrgCommTool = () => {
     setSelectedItem(null);
   };
 
+  const capitalize = (s) =>
+    s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : "";
+
   // File import handlers
+  const handleCodeOwnersImport = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+  
+    const text = await file.text();
+    const json = JSON.parse(text);
+  
+    const groups = json.groups || {};
+  
+    Object.entries(groups).forEach(([groupName, members]) => {
+      // 1. Create a new tech team for each group
+      const teamId = `team-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const newTeam = {
+        id: teamId,
+        name: groupName,
+        description: "Imported from CODEOWNERS JSON",
+        teamsLink: "",
+        employees: []
+      };
+  
+      // Add the team
+      setTeams(prev => [...prev, newTeam]);
+  
+      // 2. For each member like "@first.last"
+      members.forEach(handle => {
+        const clean = handle.replace("@", "").trim();
+        const [first, last] = clean.split(".");
+        const fullName = `${capitalize(first)} ${capitalize(last)}`;
+  
+        // Check if employee already exists
+        let emp = employees.find(e => 
+          e.name.toLowerCase() === fullName.toLowerCase()
+        );
+  
+        // If employee does NOT exist → create them
+        if (!emp) {
+          const newEmp = {
+            id: `emp-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+            name: fullName,
+            reportsTo: "",
+            jobTitle: "",
+            department: "",
+            topics: [],
+            teams: [teamId]
+          };
+  
+          setEmployees(prev => [...prev, newEmp]);
+  
+          // Add employee to team
+          setTeams(prev =>
+            prev.map(t =>
+              t.id === teamId
+                ? { ...t, employees: [...t.employees, newEmp.id] }
+                : t
+            )
+          );
+        } else {
+          // Employee exists → just link them to the team
+          if (!emp.teams.includes(teamId)) {
+            setEmployees(prev =>
+              prev.map(e =>
+                e.id === emp.id ? { ...e, teams: [...e.teams, teamId] } : e
+              )
+            );
+          }
+  
+          // Add to team object
+          setTeams(prev =>
+            prev.map(t =>
+              t.id === teamId
+                ? { ...t, employees: [...t.employees, emp.id] }
+                : t
+            )
+          );
+        }
+      });
+    });
+  
+    e.target.value = "";
+  };
+  
   const handleEmployeeImport = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -475,6 +559,19 @@ const OrgCommTool = () => {
               <Upload size={20} />
               Import Teams
               <input type="file" accept=".xlsx,.xls" onChange={handleTeamImport} className="hidden" />
+            </label>
+          )}
+
+          {activeView === 'teams' && (
+            <label className="px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 cursor-pointer transition-colors font-medium flex items-center gap-2 shadow-sm">
+              <Upload size={20} />
+              Import Code Owners JSON
+              <input
+                type="file"
+                accept="application/json"
+                onChange={handleCodeOwnersImport}
+                className="hidden"
+              />
             </label>
           )}
         
