@@ -2,6 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Search, Users, Building2, Tag, Upload, X, ExternalLink, Plus, Edit2, Trash } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
+const capitalize = (s) =>
+    s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : "";
+
 const OrgCommTool = () => {
   const [employees, setEmployees] = useState(() => {
     const saved = localStorage.getItem("employees");
@@ -120,9 +123,6 @@ const OrgCommTool = () => {
   
     setSelectedItem(null);
   };
-
-  const capitalize = (s) =>
-    s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : "";
 
   // File import handlers
   const handleCodeOwnersImport = async (e) => {
