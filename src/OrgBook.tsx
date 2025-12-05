@@ -14,8 +14,8 @@ const safeLoad = (key) => {
   }
 };
 
-// const capitalize = (s) =>
-//     s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : "";
+const capitalize = (s) =>
+    s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : "";
 
 const OrgCommTool = () => {
   const [employees, setEmployees] = useState(() => safeLoad("employees"));
@@ -140,79 +140,79 @@ const OrgCommTool = () => {
   };
 
   // File import handlers
-  // const handleCodeOwnersImport = async (e) => {
-  //   const file = e.target.files[0];
-  //   if (!file) return;
+  const handleCodeOwnersImport = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
   
-  //   const text = await file.text();
-  //   const json = JSON.parse(text);
+    const text = await file.text();
+    const json = JSON.parse(text);
   
-  //   const groups = json.groups || {};
+    const groups = json.groups || {};
   
-  //   // Prepare new arrays
-  //   let newTeams = [];
-  //   let newEmployees = [...employees]; // start with existing
-  //   let teamLinks = {}; // teamId -> list of employeeIds to link
+    // Prepare new arrays
+    let newTeams = [];
+    let newEmployees = [...employees]; // start with existing
+    let teamLinks = {}; // teamId -> list of employeeIds to link
   
-  //   Object.entries(groups).forEach(([groupName, members]) => {
-  //     const teamId = `team-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    Object.entries(groups).forEach(([groupName, members]) => {
+      const teamId = `team-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   
-  //     newTeams.push({
-  //       id: teamId,
-  //       name: groupName,
-  //       description: "Imported from CODEOWNERS JSON",
-  //       teamsLink: "",
-  //       employees: []
-  //     });
+      newTeams.push({
+        id: teamId,
+        name: groupName,
+        description: "Imported from CODEOWNERS JSON",
+        teamsLink: "",
+        employees: []
+      });
   
-  //     teamLinks[teamId] = [];
+      teamLinks[teamId] = [];
   
-  //     members.forEach(handle => {
-  //       const clean = handle.replace("@", "").trim();
-  //       const [first, last] = clean.split(".");
-  //       const fullName = `${capitalize(first)} ${capitalize(last)}`;
+      members.forEach(handle => {
+        const clean = handle.replace("@", "").trim();
+        const [first, last] = clean.split(".");
+        const fullName = `${capitalize(first)} ${capitalize(last)}`;
   
-  //       // match by name
-  //       let emp = newEmployees.find(e =>
-  //         e.name.toLowerCase() === fullName.toLowerCase()
-  //       );
+        // match by name
+        let emp = newEmployees.find(e =>
+          e.name.toLowerCase() === fullName.toLowerCase()
+        );
   
-  //       if (!emp) {
-  //         emp = {
-  //           id: `emp-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-  //           name: fullName,
-  //           reportsTo: "",
-  //           jobTitle: "",
-  //           department: "",
-  //           topics: [],
-  //           teams: [teamId]
-  //         };
-  //         newEmployees.push(emp);
-  //       } else {
-  //         if (!emp.teams.includes(teamId)) {
-  //           emp.teams = [...emp.teams, teamId];
-  //         }
-  //       }
+        if (!emp) {
+          emp = {
+            id: `emp-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+            name: fullName,
+            reportsTo: "",
+            jobTitle: "",
+            department: "",
+            topics: [],
+            teams: [teamId]
+          };
+          newEmployees.push(emp);
+        } else {
+          if (!emp.teams.includes(teamId)) {
+            emp.teams = [...emp.teams, teamId];
+          }
+        }
   
-  //       teamLinks[teamId].push(emp.id);
-  //     });
-  //   });
+        teamLinks[teamId].push(emp.id);
+      });
+    });
   
-  //   // Merge into state ONCE
-  //   setTeams(prev =>
-  //     [
-  //       ...prev,
-  //       ...newTeams.map(t => ({
-  //         ...t,
-  //         employees: teamLinks[t.id]
-  //       }))
-  //     ]
-  //   );
+    // Merge into state ONCE
+    setTeams(prev =>
+      [
+        ...prev,
+        ...newTeams.map(t => ({
+          ...t,
+          employees: teamLinks[t.id]
+        }))
+      ]
+    );
   
-  //   setEmployees(newEmployees);
+    setEmployees(newEmployees);
   
-  //   e.target.value = "";
-  // };
+    e.target.value = "";
+  };
   
   const handleEmployeeImport = (e) => {
     const file = e.target.files[0];
@@ -570,7 +570,7 @@ const OrgCommTool = () => {
             </label>
           )}
 
-          /* {activeView === 'teams' && (
+          {activeView === 'teams' && (
             <label className="px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 cursor-pointer transition-colors font-medium flex items-center gap-2 shadow-sm">
               <Upload size={20} />
               Import Code Owners JSON
@@ -581,7 +581,7 @@ const OrgCommTool = () => {
                 className="hidden"
               />
             </label>
-          )} */
+          )}
         
         </div>
 
