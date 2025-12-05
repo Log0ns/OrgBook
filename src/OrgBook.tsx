@@ -826,9 +826,9 @@ const OrgCommTool = () => {
               <div className="flex items-center gap-2">
                 <button
                   className="bg-blue-600 text-white px-3 py-2 rounded-lg"
-                  onClick={() => setMergeEmployee(selectedEmployee)}
+                  onClick={() => setMergeEmployee(selectedItem.data)}
                 >
-                  Merge With Another Employee
+                  Employee Merge
                 </button>
                 <button
                   onClick={() => openEditModal(selectedItem.data, selectedItem.type)}
