@@ -986,25 +986,32 @@ const OrgCommTool = () => {
 
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold text-slate-800">Linked Topics & Teams</h3>
-                    <button
-                      className="bg-blue-600 text-white px-3 py-2 rounded-lg"
-                      onClick={() => setMergeEmployee(selectedItem.data)}
-                    >
-                      Employee Merge
-                    </button>
-                    <button
-                      onClick={() => setShowLinkModal(true)}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                    >
-                      Add Link
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        className="bg-blue-600 text-white px-3 py-2 rounded-lg"
+                        onClick={() => setMergeEmployee(selectedItem.data)}
+                      >
+                        Employee Merge
+                      </button>
+                      <button
+                        onClick={() => setShowLinkModal(true)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                      >
+                        Add Link
+                      </button>
+                    </div>
                   </div>
 
                   <div className="space-y-4">
                     <div>
                       <h4 className="text-sm font-semibold text-emerald-700 mb-2">Topics</h4>
                       <div className="space-y-2">
-                        {selectedItem.data.topics.map(topicId => {
+                        {(selectedItem.type === "topic"
+                            ? selectedItem.data.experts || []
+                            : selectedItem.type === "team"
+                            ? selectedItem.data.employees || []
+                            : []
+                          ).map(topicId => {
                           const topic = topics.find(t => t.id === topicId);
                           return topic ? (
                             <div key={topicId} className="flex items-center justify-between bg-emerald-50 rounded-lg p-3">
@@ -1036,7 +1043,12 @@ const OrgCommTool = () => {
                     <div>
                       <h4 className="text-sm font-semibold text-purple-700 mb-2">Tech Teams</h4>
                       <div className="space-y-2">
-                        {selectedItem.data.teams.map(teamId => {
+                        {(selectedItem.type === "topic"
+                            ? selectedItem.data.experts || []
+                            : selectedItem.type === "team"
+                            ? selectedItem.data.employees || []
+                            : []
+                          ).map(teamId => {
                           const team = teams.find(t => t.id === teamId);
                           return team ? (
                             <div key={teamId} className="flex items-center justify-between bg-purple-50 rounded-lg p-3">
@@ -1085,7 +1097,12 @@ const OrgCommTool = () => {
                   
                   <h3 className="text-lg font-semibold text-slate-800 mb-4">Contacts</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {selectedItem.data.experts.map(empId => {
+                    {(selectedItem.type === "topic"
+                        ? selectedItem.data.experts || []
+                        : selectedItem.type === "team"
+                        ? selectedItem.data.employees || []
+                        : []
+                      ).map(empId => {
                       const emp = employees.find(e => e.id === empId);
                       return emp ? (
                         <div key={empId} className="bg-slate-50 rounded-lg p-4 border border-slate-200">
