@@ -1085,7 +1085,7 @@ const OrgCommTool = () => {
                   
                   <h3 className="text-lg font-semibold text-slate-800 mb-4">Contacts</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {selectedItem.data.employees.map(empId => {
+                    {selectedItem.data.experts.map(empId => {
                       const emp = employees.find(e => e.id === empId);
                       return emp ? (
                         <div key={empId} className="bg-slate-50 rounded-lg p-4 border border-slate-200">
@@ -1095,7 +1095,7 @@ const OrgCommTool = () => {
                         </div>
                       ) : null;
                     })}
-                    {selectedItem.data.employees.length === 0 && (
+                    {selectedItem.data.experts.length === 0 && (
                       <p className="text-slate-500 text-sm col-span-2">No contacts linked</p>
                     )}
                   </div>
