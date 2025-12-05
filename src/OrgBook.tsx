@@ -354,7 +354,7 @@ const OrgCommTool = () => {
             name: fullName,
             reportsTo: "",
             jobTitle: "",
-            department: "",
+            department: "Unassigned",
             topics: [],
             teams: [teamId]
           };
@@ -401,7 +401,7 @@ const OrgCommTool = () => {
         name: row.Name || row.name || '',
         reportsTo: row['Reports To'] || row.reportsTo || row['reports to'] || '',
         jobTitle: row['Job Title'] || row.jobTitle || row['job title'] || '',
-        department: row.Department || row.department || '',
+        department: row.Department || row.department || "Unassigned",
         topics: [],
         teams: []
       }));
@@ -579,7 +579,7 @@ const OrgCommTool = () => {
         name: formData.name || '',
         reportsTo: formData.reportsTo || '',
         jobTitle: formData.jobTitle || '',
-        department: formData.department || '',
+        department: formData.department || "Unassigned",
         topics: [],
         teams: []
       };
@@ -621,7 +621,7 @@ const OrgCommTool = () => {
           name: formData.name || '',
           reportsTo: formData.reportsTo || '',
           jobTitle: formData.jobTitle || '',
-          department: formData.department || ''
+          department: formData.department || "Unassigned"
         } : emp
       ));
       if (selectedItem?.data?.id === formData.id) {
