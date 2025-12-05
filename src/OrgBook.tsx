@@ -1112,7 +1112,12 @@ const OrgCommTool = () => {
                         </div>
                       ) : null;
                     })}
-                    {selectedItem.data.experts.length === 0 && (
+                    {(selectedItem.type === "topic"
+                      ? (selectedItem.data.experts || []).length
+                      : selectedItem.type === "team"
+                      ? (selectedItem.data.employees || []).length
+                      : 0
+                    ) === 0 && (
                       <p className="text-slate-500 text-sm col-span-2">No contacts linked</p>
                     )}
                   </div>
