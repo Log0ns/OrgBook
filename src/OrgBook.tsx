@@ -17,6 +17,20 @@ const safeLoad = (key) => {
 const capitalize = (s) =>
     s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : "";
 
+const normalizeName = (name) => {
+  if (!name) return "";
+
+  let n = name.trim().toLowerCase();
+
+  // Handle "last, first" → "first last"
+  if (n.includes(",")) {
+    const [last, first] = n.split(",").map(s => s.trim());
+    return `${first} ${last}`;
+  }
+
+  return n;
+};
+
 const OrgCommTool = () => {
   const [employees, setEmployees] = useState(() => safeLoad("employees"));
   useEffect(() => {
@@ -171,12 +185,14 @@ const OrgCommTool = () => {
         const clean = handle.replace("@", "").trim();
         const [first, last] = clean.split(".");
         const fullName = `${capitalize(first)} ${capitalize(last)}`;
-  
-        // match by name
+      
+        // MATCH EXISTING EMPLOYEES REGARDLESS OF NAME FORMAT
+        const normalizedFull = normalizeName(fullName);
+      
         let emp = newEmployees.find(e =>
-          e.name.toLowerCase() === fullName.toLowerCase()
+          normalizeName(e.name) === normalizedFull
         );
-  
+      
         if (!emp) {
           emp = {
             id: `emp-${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -193,7 +209,7 @@ const OrgCommTool = () => {
             emp.teams = [...emp.teams, teamId];
           }
         }
-  
+      
         teamLinks[teamId].push(emp.id);
       });
     });
@@ -381,7 +397,7 @@ const OrgCommTool = () => {
   // Filter employees
   const filteredEmployees = useMemo(() => {
     return employees.filter(emp => {
-      const matchesSearch = emp.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = normalizeName(emp.name).includes(normalizeName(searchTerm));
       const matchesDept = !filterDepartment || emp.department === filterDepartment;
       const matchesManager = !filterManager || emp.reportsTo === filterManager;
       const matchesTopic = !filterTopic || emp.topics.includes(filterTopic);
