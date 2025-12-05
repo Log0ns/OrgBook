@@ -198,6 +198,117 @@ const OrgCommTool = () => {
   };
 
   // File import handlers
+  const handleProductComponentsImport = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+  
+    const data = await file.arrayBuffer();
+    const workbook = XLSX.read(data);
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+  
+    let newTopics = [];
+    let updatedEmployees = [...employees];
+  
+    // For fast lookup
+    const findEmpByName = (name) =>
+      updatedEmployees.find((e) =>
+        normalizeName(e.name) === normalizeName(name)
+      );
+  
+    rows.forEach((row) => {
+      const topicName = row["component"] || row["Component"] || "";
+      if (!topicName.trim()) return;
+  
+      const description =
+        row["description"] ||
+        row["Description"] ||
+        "";
+  
+      const pmName =
+        row["product manager"] ||
+        row["Product Manager"] ||
+        "";
+  
+      const poName =
+        row["product owner"] ||
+        row["Product Owner"] ||
+        "";
+  
+      const scName =
+        row["support coach"] ||
+        row["Support Coach"] ||
+        "";
+  
+      // Build list of employee IDs
+      let expertIds = [];
+  
+      const ensureEmployee = (name) => {
+        if (!name.trim()) return;
+  
+        let emp = findEmpByName(name);
+  
+        if (!emp) {
+          // Create new employee if none found
+          emp = {
+            id: `emp-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+            name: name,
+            reportsTo: "",
+            jobTitle: "",
+            department: "Unassigned",
+            topics: [],
+            teams: []
+          };
+          updatedEmployees.push(emp);
+        }
+  
+        expertIds.push(emp.id);
+  
+        // Attach topic AFTER topic creation (done later)
+        return emp;
+      };
+  
+      ensureEmployee(pmName);
+      ensureEmployee(poName);
+      ensureEmployee(scName);
+  
+      const topicId = `topic-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  
+      newTopics.push({
+        id: topicId,
+        name: topicName.trim(),
+        description: description.trim(),
+        experts: expertIds,
+        employees: [], // unused now, but keep structure consistent
+        link: "",
+        teams: []
+      });
+    });
+  
+    // Save topics
+    setTopics((prev) => [...prev, ...newTopics]);
+  
+    // Update employee → topics linkage
+    updatedEmployees = updatedEmployees.map((emp) => {
+      const adds = [];
+      newTopics.forEach((t) => {
+        if (t.experts.includes(emp.id)) {
+          adds.push(t.id);
+        }
+      });
+  
+      return {
+        ...emp,
+        topics: [...new Set([...(emp.topics || []), ...adds])]
+      };
+    });
+  
+    setEmployees(updatedEmployees);
+  
+    // Reset file input
+    e.target.value = "";
+  };
+  
   const handleCodeOwnersImport = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -633,12 +744,25 @@ const OrgCommTool = () => {
           {activeView === 'teams' && (
             <label className="px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 cursor-pointer transition-colors font-medium flex items-center gap-2 shadow-sm">
               <Upload size={20} />
-              Import Code Owners JSON
+              Import Code Owners (JSON)
               <input
                 type="file"
                 accept="application/json"
                 onChange={handleCodeOwnersImport}
                 className="hidden"
+              />
+            </label>
+          )}
+
+          {activeView === 'topics' && (
+            <label className="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg bg-blue-600 text-white">
+              <Upload size={16} />
+              Import Product Components (xlsx)
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                className="hidden"
+                onChange={handleProductComponentsImport}
               />
             </label>
           )}
@@ -824,12 +948,12 @@ const OrgCommTool = () => {
                 {selectedItem.data.name}
               </h2>
               <div className="flex items-center gap-2">
-                <button
+                {/* <button
                   className="bg-blue-600 text-white px-3 py-2 rounded-lg"
                   onClick={() => setMergeEmployee(selectedItem.data)}
                 >
                   Employee Merge
-                </button>
+                </button> */}
                 <button
                   onClick={() => openEditModal(selectedItem.data, selectedItem.type)}
                   className="text-white hover:bg-white hover:bg-opacity-20 rounded-lg p-2 transition-colors"
