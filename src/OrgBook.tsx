@@ -948,12 +948,6 @@ const OrgCommTool = () => {
                 {selectedItem.data.name}
               </h2>
               <div className="flex items-center gap-2">
-                {/* <button
-                  className="bg-blue-600 text-white px-3 py-2 rounded-lg"
-                  onClick={() => setMergeEmployee(selectedItem.data)}
-                >
-                  Employee Merge
-                </button> */}
                 <button
                   onClick={() => openEditModal(selectedItem.data, selectedItem.type)}
                   className="text-white hover:bg-white hover:bg-opacity-20 rounded-lg p-2 transition-colors"
@@ -992,6 +986,12 @@ const OrgCommTool = () => {
 
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold text-slate-800">Linked Topics & Teams</h3>
+                    <button
+                      className="bg-blue-600 text-white px-3 py-2 rounded-lg"
+                      onClick={() => setMergeEmployee(selectedItem.data)}
+                    >
+                      Employee Merge
+                    </button>
                     <button
                       onClick={() => setShowLinkModal(true)}
                       className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
