@@ -71,6 +71,7 @@ const OrgCommTool = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [createType, setCreateType] = useState('');
   const [formData, setFormData] = useState({});
+  const [mergeEmployee, setMergeEmployee] = useState(null);
 
   // Deleting functionality
   const deleteDepartment = (departmentName) => {
@@ -120,6 +121,49 @@ const OrgCommTool = () => {
     );
   
     // Close modal
+    setSelectedItem(null);
+  };
+
+  const mergeEmployees = (sourceId, targetId) => {
+    const source = employees.find(e => e.id === sourceId);
+    const target = employees.find(e => e.id === targetId);
+  
+    if (!source || !target) return;
+  
+    // Merge arrays uniquely
+    const mergeUnique = (a,b) => [...new Set([...(a || []), ...(b || [])])];
+  
+    const merged = {
+      ...target,
+      jobTitle: target.jobTitle || source.jobTitle,
+      department: target.department || source.department,
+      reportsTo: target.reportsTo || source.reportsTo,
+      teams: mergeUnique(target.teams, source.teams),
+      topics: mergeUnique(target.topics, source.topics),
+    };
+  
+    // Update all team references
+    const updatedTeams = teams.map(t => ({
+      ...t,
+      employees: t.employees?.map(id => id === sourceId ? targetId : id)
+    }));
+  
+    // Update topics
+    const updatedTopics = topics.map(t => ({
+      ...t,
+      experts: t.experts?.map(id => id === sourceId ? targetId : id)
+    }));
+  
+    // Update employees list (delete source, replace target)
+    const updatedEmployees = employees
+      .filter(e => e.id !== sourceId)
+      .map(e => (e.id === targetId ? merged : e));
+  
+    setEmployees(updatedEmployees);
+    setTeams(updatedTeams);
+    setTopics(updatedTopics);
+  
+    setMergeEmployee(null);
     setSelectedItem(null);
   };
 
@@ -781,6 +825,12 @@ const OrgCommTool = () => {
               </h2>
               <div className="flex items-center gap-2">
                 <button
+                  className="bg-blue-600 text-white px-3 py-2 rounded-lg"
+                  onClick={() => setMergeEmployee(selectedEmployee)}
+                >
+                  Merge With Another Employee
+                </button>
+                <button
                   onClick={() => openEditModal(selectedItem.data, selectedItem.type)}
                   className="text-white hover:bg-white hover:bg-opacity-20 rounded-lg p-2 transition-colors"
                   title="Edit"
@@ -1231,6 +1281,39 @@ const OrgCommTool = () => {
           </div>
         </div>
       )}
+
+      {/* Employee Merge Modal */}
+      {mergeEmployee && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="bg-white rounded-xl p-4 w-full max-w-md">
+          <h3 className="text-lg font-semibold mb-4">
+            Merge "{mergeEmployee.name}" into:
+          </h3>
+    
+          <div className="max-h-64 overflow-y-auto space-y-2">
+            {employees
+              .filter(e => e.id !== mergeEmployee.id)
+              .sort((a,b) => a.name.localeCompare(b.name))
+              .map(e => (
+                <button
+                  key={e.id}
+                  className="w-full text-left bg-gray-100 hover:bg-gray-200 p-2 rounded"
+                  onClick={() => mergeEmployees(mergeEmployee.id, e.id)}
+                >
+                  {e.name} — {e.department || "Unassigned"}
+                </button>
+              ))}
+          </div>
+    
+          <button
+            className="mt-4 px-3 py-2 rounded bg-gray-400 text-white"
+            onClick={() => setMergeEmployee(null)}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    )}
 
       {/* Link Modal */}
       {showLinkModal && selectedItem?.type === 'employee' && (
