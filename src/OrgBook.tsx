@@ -87,7 +87,7 @@ const OrgCommTool = () => {
     setTopics(prev =>
       prev.map(topic => ({
         ...topic,
-        employees: topic.employees.filter(id => !employeesToDelete.includes(id))
+        employees: topic.experts.filter(id => !employeesToDelete.includes(id))
       }))
     );
   
@@ -492,7 +492,7 @@ const OrgCommTool = () => {
     if (itemType === 'topic') {
       setTopics(prev => prev.map(topic => {
         if (topic.id === itemId) {
-          return { ...topic, employees: [...topic.employees, employeeId] };
+          return { ...topic, employees: [...topic.experts, employeeId] };
         }
         return topic;
       }));
@@ -518,7 +518,7 @@ const OrgCommTool = () => {
     if (itemType === 'topic') {
       setTopics(prev => prev.map(topic => {
         if (topic.id === itemId) {
-          return { ...topic, employees: topic.employees.filter(id => id !== employeeId) };
+          return { ...topic, employees: topic.experts.filter(id => id !== employeeId) };
         }
         return topic;
       }));
@@ -895,7 +895,7 @@ const OrgCommTool = () => {
                     {topic.name}
                   </h3>
                   <span className="text-sm bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full">
-                    {topic.employees.length} contact{topic.employees.length !== 1 ? 's' : ''}
+                    {topic.experts.length} contact{topic.experts.length !== 1 ? 's' : ''}
                   </span>
                 </div>
                 <p className="text-slate-600 text-sm">{topic.description}</p>
