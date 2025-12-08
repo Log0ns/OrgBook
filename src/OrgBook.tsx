@@ -198,6 +198,89 @@ const OrgCommTool = () => {
   };
 
   // File import handlers
+  const handleEmployeeSkillImport = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+  
+    const data = await file.arrayBuffer();
+    const workbook = XLSX.read(data);
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+  
+    let newEmployees = [...employees];
+    let newTopics = [...topics];
+  
+    const getEmp = (name) =>
+      newEmployees.find((e) => normalizeName(e.name) === normalizeName(name));
+  
+    const getTopic = (skill) =>
+      newTopics.find((t) => t.name.toLowerCase() === skill.toLowerCase());
+  
+    for (const row of rows) {
+      const rawName = row["name"] || row["Name"] || "";
+      const rawSkill = row["skill"] || row["Skill"] || "";
+  
+      if (!rawName.trim() || !rawSkill.trim()) continue;
+  
+      // ------------------------
+      // EMPLOYEE: Find or Create
+      // ------------------------
+      let emp = getEmp(rawName);
+  
+      if (!emp) {
+        emp = {
+          id: `emp-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          name: rawName.trim(),
+          reportsTo: "",
+          jobTitle: "",
+          department: "Unassigned",
+          topics: [],
+          teams: []
+        };
+        newEmployees.push(emp);
+      }
+  
+      // ------------------------
+      // TOPIC (skill): Find or Create
+      // ------------------------
+      let topic = getTopic(rawSkill);
+  
+      if (!topic) {
+        topic = {
+          id: `topic-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          name: rawSkill.trim(),
+          description: `Skill: ${rawSkill.trim()}`,
+          experts: [],
+          employees: [],
+          link: "",
+          teams: []
+        };
+        newTopics.push(topic);
+      }
+  
+      // ------------------------
+      // Attach employee to topic
+      // ------------------------
+      if (!topic.experts.includes(emp.id)) {
+        topic.experts = [...topic.experts, emp.id];
+      }
+  
+      // ------------------------
+      // Attach topic to employee
+      // ------------------------
+      if (!emp.topics.includes(topic.id)) {
+        emp.topics = [...emp.topics, topic.id];
+      }
+    }
+  
+    // Save updated structures
+    setEmployees(newEmployees);
+    setTopics(newTopics);
+  
+    // Clear file input
+    e.target.value = "";
+  };
+  
   const handleProductComponentsImport = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -763,6 +846,19 @@ const OrgCommTool = () => {
                 accept=".xlsx,.xls"
                 className="hidden"
                 onChange={handleProductComponentsImport}
+              />
+            </label>
+          )}
+
+          {activeView === 'employees' && (
+            <label className="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg bg-blue-600 text-white">
+              <Upload size={16} />
+              Import Employee Skills
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                className="hidden"
+                onChange={handleEmployeeSkillImport}
               />
             </label>
           )}
