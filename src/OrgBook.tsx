@@ -1081,55 +1081,20 @@ const OrgCommTool = () => {
                   </div>
 
                   <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold text-slate-800 mb-4">Linked Topics & Teams</h3>
-                    <div className="space-y-6">
-                    
-                      {/* TOPICS */}
-                      {selectedItem.data.topics && selectedItem.data.topics.length > 0 && (
-                        <div>
-                          <h4 className="font-semibold text-slate-700 mb-2">Topics</h4>
-                          <div className="space-y-2">
-                            {selectedItem.data.topics.map(tid => {
-                              const topic = topics.find(t => t.id === tid);
-                              return topic ? (
-                                <div
-                                  key={tid}
-                                  className="bg-slate-50 p-3 rounded border border-slate-200"
-                                >
-                                  {topic.name}
-                                </div>
-                              ) : null;
-                            })}
-                          </div>
-                        </div>
-                      )}
-                    
-                      {/* TEAMS */}
-                      {selectedItem.data.teams && selectedItem.data.teams.length > 0 && (
-                        <div>
-                          <h4 className="font-semibold text-slate-700 mb-2">Tech Teams</h4>
-                          <div className="space-y-2">
-                            {selectedItem.data.teams.map(tid => {
-                              const team = teams.find(t => t.id === tid);
-                              return team ? (
-                                <div
-                                  key={tid}
-                                  className="bg-slate-50 p-3 rounded border border-slate-200"
-                                >
-                                  {team.name}
-                                </div>
-                              ) : null;
-                            })}
-                          </div>
-                        </div>
-                      )}
-                    
-                      {/* NONE */}
-                      {(!selectedItem.data.topics || selectedItem.data.topics.length === 0) &&
-                       (!selectedItem.data.teams || selectedItem.data.teams.length === 0) && (
-                        <p className="text-slate-500 text-sm">No links found</p>
-                      )}
-                    
+                    <h3 className="text-lg font-semibold text-slate-800">Linked Topics & Teams</h3>
+                    <div className="flex items-center gap-2">
+                      <button
+                        className="bg-blue-600 text-white px-3 py-2 rounded-lg"
+                        onClick={() => setMergeEmployee(selectedItem.data)}
+                      >
+                        Employee Merge
+                      </button>
+                      <button
+                        onClick={() => setShowLinkModal(true)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                      >
+                        Add Link
+                      </button>            
                     </div>
                   </div>
 
