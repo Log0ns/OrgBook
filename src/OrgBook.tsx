@@ -1082,17 +1082,20 @@ const OrgCommTool = () => {
 
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold text-slate-800 mb-4">Linked Topics & Teams</h3>
-                    <div className="space-y-3">
+                    <div className="space-y-6">
                     
-                      {/** TOPICS this employee is linked to */}
-                      {editData.topics && editData.topics.length > 0 && (
+                      {/* TOPICS */}
+                      {selectedItem.data.topics && selectedItem.data.topics.length > 0 && (
                         <div>
                           <h4 className="font-semibold text-slate-700 mb-2">Topics</h4>
                           <div className="space-y-2">
-                            {editData.topics.map(tid => {
+                            {selectedItem.data.topics.map(tid => {
                               const topic = topics.find(t => t.id === tid);
                               return topic ? (
-                                <div key={tid} className="bg-slate-50 p-3 rounded border border-slate-200">
+                                <div
+                                  key={tid}
+                                  className="bg-slate-50 p-3 rounded border border-slate-200"
+                                >
                                   {topic.name}
                                 </div>
                               ) : null;
@@ -1101,15 +1104,18 @@ const OrgCommTool = () => {
                         </div>
                       )}
                     
-                      {/** TEAMS this employee is linked to */}
-                      {editData.teams && editData.teams.length > 0 && (
+                      {/* TEAMS */}
+                      {selectedItem.data.teams && selectedItem.data.teams.length > 0 && (
                         <div>
                           <h4 className="font-semibold text-slate-700 mb-2">Tech Teams</h4>
                           <div className="space-y-2">
-                            {editData.teams.map(tid => {
+                            {selectedItem.data.teams.map(tid => {
                               const team = teams.find(t => t.id === tid);
                               return team ? (
-                                <div key={tid} className="bg-slate-50 p-3 rounded border border-slate-200">
+                                <div
+                                  key={tid}
+                                  className="bg-slate-50 p-3 rounded border border-slate-200"
+                                >
                                   {team.name}
                                 </div>
                               ) : null;
@@ -1118,9 +1124,9 @@ const OrgCommTool = () => {
                         </div>
                       )}
                     
-                      {/** If nothing linked */}
-                      {(!editData.topics || editData.topics.length === 0) &&
-                       (!editData.teams || editData.teams.length === 0) && (
+                      {/* NONE */}
+                      {(!selectedItem.data.topics || selectedItem.data.topics.length === 0) &&
+                       (!selectedItem.data.teams || selectedItem.data.teams.length === 0) && (
                         <p className="text-slate-500 text-sm">No links found</p>
                       )}
                     
