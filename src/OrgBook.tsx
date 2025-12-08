@@ -1099,80 +1099,84 @@ const OrgCommTool = () => {
                   </div>
 
                   <div className="space-y-4">
-                    <div>
-                      <h4 className="text-sm font-semibold text-emerald-700 mb-2">Topics</h4>
-                      <div className="space-y-2">
-                        {(selectedItem.type === "topic"
-                            ? selectedItem.data.experts || []
-                            : selectedItem.type === "team"
-                            ? selectedItem.data.employees || []
-                            : []
-                          ).map(topicId => {
-                          const topic = topics.find(t => t.id === topicId);
-                          return topic ? (
-                            <div key={topicId} className="flex items-center justify-between bg-emerald-50 rounded-lg p-3">
-                              <span className="text-slate-800">{topic.name}</span>
-                              <button
-                                onClick={() => {
-                                  unlinkEmployeeFromItem(selectedItem.data.id, topicId, 'topic');
-                                  setSelectedItem({
-                                    ...selectedItem,
-                                    data: {
-                                      ...selectedItem.data,
-                                      topics: selectedItem.data.topics.filter(id => id !== topicId)
-                                    }
-                                  });
-                                }}
-                                className="text-red-600 hover:text-red-700"
-                              >
-                                <X size={16} />
-                              </button>
-                            </div>
-                          ) : null;
-                        })}
-                        {selectedItem.data.topics.length === 0 && (
-                          <p className="text-slate-500 text-sm">No topics linked</p>
-                        )}
-                      </div>
-                    </div>
 
-                    <div>
-                      <h4 className="text-sm font-semibold text-purple-700 mb-2">Tech Teams</h4>
-                      <div className="space-y-2">
-                        {(selectedItem.type === "topic"
-                            ? selectedItem.data.experts || []
-                            : selectedItem.type === "team"
-                            ? selectedItem.data.employees || []
-                            : []
-                          ).map(teamId => {
-                          const team = teams.find(t => t.id === teamId);
-                          return team ? (
-                            <div key={teamId} className="flex items-center justify-between bg-purple-50 rounded-lg p-3">
-                              <span className="text-slate-800">{team.name}</span>
-                              <button
-                                onClick={() => {
-                                  unlinkEmployeeFromItem(selectedItem.data.id, teamId, 'team');
-                                  setSelectedItem({
-                                    ...selectedItem,
-                                    data: {
-                                      ...selectedItem.data,
-                                      teams: selectedItem.data.teams.filter(id => id !== teamId)
-                                    }
-                                  });
-                                }}
-                                className="text-red-600 hover:text-red-700"
-                              >
-                                <X size={16} />
-                              </button>
-                            </div>
-                          ) : null;
-                        })}
-                        {selectedItem.data.teams.length === 0 && (
-                          <p className="text-slate-500 text-sm">No teams linked</p>
-                        )}
-                      </div>
+                  {/* TOPICS */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-emerald-700 mb-2">Topics</h4>
+                    <div className="space-y-2">
+                
+                      {(selectedItem.data.topics || []).map(topicId => {
+                        const topic = topics.find(t => t.id === topicId);
+                        return topic ? (
+                          <div
+                            key={topicId}
+                            className="flex items-center justify-between bg-emerald-50 rounded-lg p-3"
+                          >
+                            <span className="text-slate-800">{topic.name}</span>
+                            <button
+                              onClick={() => {
+                                unlinkEmployeeFromItem(selectedItem.data.id, topicId, "topic");
+                                setSelectedItem({
+                                  ...selectedItem,
+                                  data: {
+                                    ...selectedItem.data,
+                                    topics: selectedItem.data.topics.filter(id => id !== topicId),
+                                  },
+                                });
+                              }}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+                        ) : null;
+                      })}
+                
+                      {(!selectedItem.data.topics || selectedItem.data.topics.length === 0) && (
+                        <p className="text-slate-500 text-sm">No topics linked</p>
+                      )}
                     </div>
                   </div>
+                
+                  {/* TEAMS */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-purple-700 mb-2">Tech Teams</h4>
+                    <div className="space-y-2">
+                
+                      {(selectedItem.data.teams || []).map(teamId => {
+                        const team = teams.find(t => t.id === teamId);
+                        return team ? (
+                          <div
+                            key={teamId}
+                            className="flex items-center justify-between bg-purple-50 rounded-lg p-3"
+                          >
+                            <span className="text-slate-800">{team.name}</span>
+                            <button
+                              onClick={() => {
+                                unlinkEmployeeFromItem(selectedItem.data.id, teamId, "team");
+                                setSelectedItem({
+                                  ...selectedItem,
+                                  data: {
+                                    ...selectedItem.data,
+                                    teams: selectedItem.data.teams.filter(id => id !== teamId),
+                                  },
+                                });
+                              }}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+                        ) : null;
+                      })}
+                
+                      {(!selectedItem.data.teams || selectedItem.data.teams.length === 0) && (
+                        <p className="text-slate-500 text-sm">No teams linked</p>
+                      )}
+                    </div>
+                  </div>
+                
+                </div>
                 </>
               )}
 
